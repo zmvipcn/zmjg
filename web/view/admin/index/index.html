@@ -1,0 +1,19 @@
+{extend name="layout/admin" /}
+{block name="content"}
+<div class="stat-grid">
+    <div class="stat-card"><div class="label">用户总数</div><div class="num blue">{$userCount}</div></div>
+    <div class="stat-card"><div class="label">项目总数</div><div class="num green">{$projectCount}</div></div>
+    <div class="stat-card"><div class="label">进行中项目</div><div class="num orange">{$activeCount}</div></div>
+    <div class="stat-card"><div class="label">工天记录总数</div><div class="num">{$recordCount}</div></div>
+</div>
+
+<div class="card">
+    <div class="card-title"><span>系统概况</span></div>
+    <div class="desc-grid">
+        <div class="desc-item"><span class="k">APP安装包</span><span class="v">{$fileCount} 个</span></div>
+        <div class="desc-item"><span class="k">当前登录人</span><span class="v">{$currentUser->real_name}（ID：{$currentUser->id}）</span></div>
+        <div class="desc-item"><span class="k">角色</span><span class="v">{if condition="$currentUser->isSuper()"}超级管理员{else /}普通管理员{/if}</span></div>
+        <div class="desc-item"><span class="k">权限说明</span><span class="v">用户权限设置仅超级管理员可操作</span></div>
+    </div>
+</div>
+{/block}

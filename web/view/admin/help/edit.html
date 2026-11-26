@@ -1,0 +1,46 @@
+{extend name="layout/admin" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title">
+        <span>{$article ? '编辑帮助' : '新建帮助'}</span>
+        <a href="{:url('/admin/help')}" class="btn btn-sm">返回列表</a>
+    </div>
+    <form method="post" action="{:url('/admin/help/save')}">
+        <input type="hidden" name="id" value="{$article.id|default=0}">
+        <div class="form-row">
+            <div class="form-item">
+                <label>标题 <span class="req">*</span></label>
+                <input type="text" name="title" maxlength="150" value="{$article.title|default=''}" required>
+            </div>
+            <div class="form-item">
+                <label>分类</label>
+                <select name="category">
+                    {volist name="categories" id="label" key="code"}
+                    <option value="{$code}" {if condition="$article && $article->category eq $code"}selected{/if}>{$label}</option>
+                    {/volist}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-item">
+                <label>排序（数字越小越靠前）</label>
+                <input type="number" name="sort" value="{$article.sort|default=0}">
+            </div>
+            <div class="form-item">
+                <label>状态</label>
+                <select name="status">
+                    <option value="1" {if condition="!$article || $article->status == 1"}selected{/if}>显示</option>
+                    <option value="0" {if condition="$article && $article->status == 0"}selected{/if}>隐藏</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-item" style="margin-top:14px">
+            <label>内容（支持 HTML）</label>
+            <textarea name="content" style="min-height:280px">{$article.content|default=''}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+    </form>
+</div>
+{/block}

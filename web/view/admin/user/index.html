@@ -1,0 +1,121 @@
+{extend name="layout/admin" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title">
+        <span>用户管理（ID 从 1001 顺序分配，删除后 ID 释放可复用；初始密码 = zmjg + 用户ID）</span>
+        <button class="btn btn-primary" onclick="openModal('createUserModal')">＋ 创建用户</button>
+    </div>
+    <table class="data-table">
+        <thead>
+        <tr><th>用户ID</th><th>姓名/昵称</th><th>角色</th><th>电话</th><th>邮箱</th><th>状态</th><th>最后登录</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {volist name="users" id="u"}
+        <tr>
+            <td><strong>{$u.id}</strong></td>
+            <td>{$u.real_name}</td>
+            <td>
+                {if condition="$u.role === 'super'"}
+                <span class="tag tag-red">超级管理员</span>
+                {elseif condition="$u.role === 'admin'" /}
+                <span class="tag tag-blue">管理员</span>
+                {else /}
+                <span class="tag tag-gray">普通用户</span>
+                {/if}
+            </td>
+            <td>{$u.phone ?: '-'}</td>
+            <td>{$u.email ?: '-'}</td>
+            <td>{if condition="$u.status == 1"}<span class="tag tag-green">启用</span>{else /}<span class="tag tag-gray">停用</span>{/if}</td>
+            <td class="muted">{$u.last_login_time ?: '从未登录'}</td>
+            <td>
+                {if condition="$currentUser->isSuper() && $u.id != 1000"}
+                <form method="post" action="{:url('/admin/user/role', ['id' => $u->id])}" style="display:inline">
+                    <select name="role" class="btn-sm" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px"
+                            onchange="this.form.submit()" data-confirm="确认修改用户 {$u.id} 的角色权限？">
+                        <option value="user" {if condition="$u.role === 'user'"}selected{/if}>普通用户</option>
+                        <option value="admin" {if condition="$u.role === 'admin'"}selected{/if}>管理员</option>
+                    </select>
+                </form>
+                {/if}
+                {if condition="$u.id != 1000 && $u.id != $currentUser->id"}
+                <button class="btn btn-sm btn-red" onclick="openDeleteModal({$u.id})">删除</button>
+                {/if}
+                {if condition="$u.id == 1000"}<span class="muted">内置账号</span>{/if}
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    <div class="pagination">{$users|raw}</div>
+</div>
+
+<!-- 创建用户模态框 -->
+<div class="modal-mask" id="createUserModal">
+    <div class="modal">
+        <div class="modal-header">创建用户<button type="button" class="modal-close" onclick="closeModal('createUserModal')">×</button></div>
+        <form method="post" action="{:url('/admin/user/create')}">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>姓名/昵称 <span class="req">*</span></label>
+                        <input type="text" name="real_name" maxlength="50" required>
+                    </div>
+                    {if condition="$currentUser->isSuper()"}
+                    <div class="form-item">
+                        <label>角色（仅超级管理员可分配）</label>
+                        <select name="role">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    {else /}
+                    <input type="hidden" name="role" value="user">
+                    {/if}
+                </div>
+                <div class="form-row">
+                    <div class="form-item"><label>电话</label><input type="text" name="phone" maxlength="30"></div>
+                    <div class="form-item"><label>邮箱</label><input type="email" name="email" maxlength="100"></div>
+                </div>
+                <div class="form-item">
+                    <label>管理员密码验证 <span class="req">*</span></label>
+                    <input type="password" name="admin_password" required placeholder="请输入您本人的登录密码以确认操作">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('createUserModal')">取消</button>
+                <button type="submit" class="btn btn-primary">确认创建</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 删除用户模态框 -->
+<div class="modal-mask" id="deleteUserModal">
+    <div class="modal">
+        <div class="modal-header">删除用户<button type="button" class="modal-close" onclick="closeModal('deleteUserModal')">×</button></div>
+        <form method="post" id="deleteUserForm" action="">
+            <div class="modal-body">
+                <div class="alert alert-error">
+                    删除后该用户的全部项目与工天数据将一并删除，且用户 ID 会被释放并可重新分配给新用户，此操作不可恢复！
+                </div>
+                <div class="form-item">
+                    <label>管理员密码验证 <span class="req">*</span></label>
+                    <input type="password" name="admin_password" required placeholder="请输入您本人的登录密码以确认删除">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('deleteUserModal')">取消</button>
+                <button type="submit" class="btn btn-red">确认删除</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openDeleteModal(id) {
+    document.getElementById('deleteUserForm').action =
+        '{:url("/admin/user/delete", ["id" => 0])}'.replace('/0', '/' + id);
+    openModal('deleteUserModal');
+}
+</script>
+{/block}

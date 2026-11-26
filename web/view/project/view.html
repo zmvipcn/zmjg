@@ -1,0 +1,137 @@
+{extend name="layout/front" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title">
+        <span>项目：{$project.name}
+            {if condition="$project.status == 1"}<span class="tag tag-blue">进行中</span>{else /}<span class="tag tag-gray">已结束</span>{/if}
+            {if condition="$project.is_default"}<span class="tag tag-green">默认项目</span>{/if}
+        </span>
+        <a href="{:url($project.status == 1 ? '/project/current' : '/project/history')}" class="btn btn-sm">返回列表</a>
+    </div>
+
+    <div class="desc-grid">
+        <div class="desc-item"><span class="k">开始日期</span><span class="v">{$project.start_date}</span></div>
+        <div class="desc-item"><span class="k">结束日期</span><span class="v">{$project.end_date ?: '进行中'}</span></div>
+        <div class="desc-item"><span class="k">累计上班</span><span class="v">{$totalDays} 天</span></div>
+        <div class="desc-item"><span class="k">累计加班</span><span class="v">{$totalOvertime} 小时</span></div>
+        <div class="desc-item"><span class="k">项目说明</span><span class="v">{$project.description ?: '-'}</span></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title"><span>工资参数</span></div>
+    <form method="post" action="{:url('/project/wage', ['id' => $project->id])}">
+        <div class="form-row">
+            <div class="form-item">
+                <label>日工资（元/天）</label>
+                <input type="number" name="daily_wage" min="0" step="0.01" value="{$project.daily_wage}">
+            </div>
+            <div class="form-item">
+                <label>加班工资系数（时薪 = 日工资 ÷ 8 × 系数）</label>
+                <input type="number" name="overtime_coefficient" min="0" step="0.1" value="{$project.overtime_coefficient}">
+            </div>
+            <div class="form-item" style="flex:0 0 auto;display:flex;align-items:flex-end">
+                <button type="submit" class="btn btn-primary">保存参数</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="calendar-head">
+        <a class="btn btn-sm" href="{:url('/project/view', ['id' => $project->id, 'y' => $prevYear, 'm' => $prevMonth])}">‹ 上月</a>
+        <span class="ym">{$year} 年 {$month} 月</span>
+        <a class="btn btn-sm" href="{:url('/project/view', ['id' => $project->id, 'y' => $nextYear, 'm' => $nextMonth])}">下月 ›</a>
+    </div>
+
+    <div class="calendar-grid">
+        {volist name="['一','二','三','四','五','六','日']" id="w"}
+        <div class="week">周{$w}</div>
+        {/volist}
+
+        {for start="0" end="$startOffset" }
+        <div class="cal-cell blank"></div>
+        {/for}
+
+        {for start="1" end="$daysInMonth + 1" name="d"}
+        <?php
+            $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+            $rec = $records[$dateStr] ?? null;
+            $hourly = $project->daily_wage > 0 ? round($project->daily_wage / 8 * $project->overtime_coefficient, 2) : 0;
+            $dayPay = $rec ? round($rec['work_days'] * $project->daily_wage, 2) : 0;
+            $otPay = $rec ? round($rec['overtime_hours'] * $hourly, 2) : 0;
+        ?>
+        <div class="cal-cell {if condition="$dateStr eq $today"}today{/if} {if condition="$rec"}has-record{/if}"
+             data-date="{$dateStr}"
+             data-days="{$rec.work_days|default=''}"
+             data-ot="{$rec.overtime_hours|default=''}"
+             data-note="{$rec.note|default=''}"
+             data-rid="{$rec.id|default=0}"
+             title="{if condition="$rec"}上班 {$rec.work_days} 天 / 加班 {$rec.overtime_hours} 小时&#10;预计工资：￥{$dayPay} + 加班 ￥{$otPay}{else /}点击添加上班记录{/if}">
+            <div class="day">{$d}</div>
+            {if condition="$rec"}
+            <div class="rec">
+                <div>上班 <span class="b">{$rec.work_days}</span> 天</div>
+                {if condition="$rec.overtime_hours > 0"}<div class="ot">加班 {$rec.overtime_hours}h</div>{/if}
+                <div class="muted" style="font-size:10px">￥{$dayPay}{if condition="$otPay > 0"} +{$otPay}{/if}</div>
+            </div>
+            {/if}
+        </div>
+        {/for}
+    </div>
+    <p class="muted" style="margin-top:12px">提示：点击日历中的日期可添加/编辑当天上班记录；工天支持 0.5 天（半天）。</p>
+</div>
+
+<!-- 上班记录模态框 -->
+<div class="modal-mask" id="recordModal">
+    <div class="modal">
+        <div class="modal-header">添加上班记录<button type="button" class="modal-close" onclick="closeModal('recordModal')">×</button></div>
+        <form method="post" action="{:url('/record/save', ['projectId' => $project->id])}">
+            <div class="modal-body">
+                <div class="form-item">
+                    <label>记录日期 <span class="req">*</span></label>
+                    <input type="date" name="record_date" required>
+                </div>
+                <div class="form-row" style="margin-top:14px">
+                    <div class="form-item">
+                        <label>上班天数（1=全天，0.5=半天）</label>
+                        <input type="number" name="work_days" min="0" max="1" step="0.1" value="1" required>
+                    </div>
+                    <div class="form-item">
+                        <label>加班时间（小时）</label>
+                        <input type="number" name="overtime_hours" min="0" step="0.5" value="0">
+                    </div>
+                </div>
+                <div class="form-item" style="margin-top:14px">
+                    <label>备注</label>
+                    <input type="text" name="note" maxlength="255" placeholder="如：夜班、雨天停工等">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red" id="recordDeleteBtn" style="display:none"
+                    onclick="document.getElementById('recordDeleteForm').submit()">删除该天记录</button>
+                <button type="button" class="btn" onclick="closeModal('recordModal')">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+        <form method="post" id="recordDeleteForm" action=""></form>
+    </div>
+</div>
+
+<script>
+// 打开记录框时同步删除按钮状态
+document.addEventListener('click', function (e) {
+    var cell = e.target.closest('.cal-cell[data-date]');
+    if (!cell) return;
+    var rid = cell.dataset.rid;
+    var delBtn = document.getElementById('recordDeleteBtn');
+    var delForm = document.getElementById('recordDeleteForm');
+    if (rid && rid !== '0') {
+        delBtn.style.display = 'inline-block';
+        delForm.action = '{:url("/record/delete", ["id" => 0])}'.replace('/0', '/' + rid);
+    } else {
+        delBtn.style.display = 'none';
+    }
+});
+</script>
+{/block}

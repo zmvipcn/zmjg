@@ -1,0 +1,28 @@
+{extend name="layout/front" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title"><span>历史项目（已结束）</span></div>
+    {if condition="$projects->isEmpty()"}
+    <div class="empty">暂无历史项目，结束后的项目会显示在这里</div>
+    {else /}
+    <table class="data-table">
+        <thead>
+        <tr><th>序号</th><th>项目名称</th><th>开始日期</th><th>结束日期</th><th>上班天数(天)</th><th>加班时间(小时)</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {volist name="projects" id="p" key="i"}
+        <tr>
+            <td>{$i}</td>
+            <td>{$p.name}</td>
+            <td>{$p.start_date}</td>
+            <td>{$p.end_date}</td>
+            <td>{$p.total_days}</td>
+            <td>{$p.total_overtime}</td>
+            <td><a class="btn btn-sm btn-primary" href="{:url('/project/view', ['id' => $p->id])}">查看</a></td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    {/if}
+</div>
+{/block}

@@ -1,0 +1,86 @@
+{extend name="layout/admin" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title">
+        <span>APP 软件管理（安卓 / iOS / 鸿蒙）</span>
+        <button class="btn btn-primary" onclick="openModal('fileModal')">＋ 发布安装包</button>
+    </div>
+    <table class="data-table">
+        <thead>
+        <tr><th>ID</th><th>平台</th><th>版本号</th><th>文件名</th><th>大小</th><th>状态</th><th>更新说明</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {volist name="files" id="f"}
+        <tr>
+            <td>{$f.id}</td>
+            <td><span class="tag tag-blue">{$platforms[$f->platform] ?? $f.platform}</span></td>
+            <td>{$f.version}</td>
+            <td>
+                {if condition="$f.file_url"}
+                <a href="{$f.file_url}" target="_blank">{$f.file_name ?: '下载'}</a>
+                {else /}-{/if}
+            </td>
+            <td>{$f.file_size ?: '-'}</td>
+            <td>{if condition="$f.status == 1"}<span class="tag tag-green">上架</span>{else /}<span class="tag tag-gray">下架</span>{/if}</td>
+            <td class="muted" style="max-width:240px">{$f.update_note}</td>
+            <td>
+                <form method="post" action="{:url('/admin/file/delete', ['id' => $f->id])}" style="display:inline"
+                      data-confirm="确认删除该安装包记录？">
+                    <button class="btn btn-sm btn-red">删除</button>
+                </form>
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    <div class="pagination">{$files|raw}</div>
+</div>
+
+<div class="modal-mask" id="fileModal">
+    <div class="modal">
+        <div class="modal-header">发布安装包<button type="button" class="modal-close" onclick="closeModal('fileModal')">×</button></div>
+        <form method="post" action="{:url('/admin/file/save')}" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>平台 <span class="req">*</span></label>
+                        <select name="platform">
+                            {volist name="platforms" id="label" key="code"}
+                            <option value="{$code}">{$label}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label>版本号 <span class="req">*</span></label>
+                        <input type="text" name="version" placeholder="如 1.0.0" required>
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label>上传安装包（与下载地址二选一，优先使用上传）</label>
+                    <input type="file" name="package">
+                </div>
+                <div class="form-item" style="margin-top:12px">
+                    <label>或填写外部下载地址</label>
+                    <input type="url" name="file_url" placeholder="https://...">
+                </div>
+                <div class="form-row" style="margin-top:12px">
+                    <div class="form-item"><label>文件大小（上传可留空自动识别）</label><input type="text" name="file_size" placeholder="如 25.6 MB"></div>
+                    <div class="form-item">
+                        <label>状态</label>
+                        <select name="status"><option value="1">上架</option><option value="0">下架</option></select>
+                    </div>
+                    <div class="form-item"><label>排序</label><input type="number" name="sort" value="0"></div>
+                </div>
+                <div class="form-item" style="margin-top:12px">
+                    <label>更新说明</label>
+                    <textarea name="update_note"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('fileModal')">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+{/block}
