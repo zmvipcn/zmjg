@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - {$siteName}</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-logo">
+            <span class="logo-dot">逐</span>
+            <h1>{$siteName}</h1>
+            <p>工天记录 · 项目管理 · 加班统计</p>
+        </div>
+
+        {if condition="session('error')"}
+        <div class="alert alert-error" style="margin-top:18px;">{:session('error')}</div>
+        {/if}
+
+        <form class="login-form" method="post" action="{:url('/login')}">
+            <div class="form-group">
+                <label>用户ID</label>
+                <input type="text" name="account" placeholder="请输入用户ID，如 1000" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label>登录密码</label>
+                <input type="password" name="password" placeholder="请输入登录密码" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn-login">登 录</button>
+        </form>
+
+        <div class="login-tip">
+            本系统不开放注册，账号由管理员统一创建<br>
+            初始密码规则：zmjg + 用户ID（如 ID 1001 的初始密码为 zmjg1001）
+        </div>
+    </div>
+</div>
+</body>
+</html>

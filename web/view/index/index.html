@@ -1,0 +1,72 @@
+{extend name="layout/front" /}
+{block name="content"}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">进行中项目</div>
+        <div class="num blue">{$activeProjects|count}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">历史项目</div>
+        <div class="num orange">{$historyCount}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">累计上班天数（天）</div>
+        <div class="num green">{$totalWorkDays}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">累计加班（小时）</div>
+        <div class="num">{$totalOvertime}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <span>进行中的项目</span>
+        <a href="{:url('/project/current')}" class="btn btn-sm">进入当前项目</a>
+    </div>
+    {if condition="$activeProjects->isEmpty()"}
+    <div class="empty">暂无进行中的项目，去「当前项目」创建第一个项目吧</div>
+    {else /}
+    <table class="data-table">
+        <thead>
+        <tr><th>项目名称</th><th>开始日期</th><th>是否默认</th><th>日工资</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {volist name="activeProjects" id="p"}
+        <tr>
+            <td>{$p.name}</td>
+            <td>{$p.start_date}</td>
+            <td>{if condition="$p.is_default"}<span class="tag tag-blue">默认项目</span>{else /}<span class="tag tag-gray">否</span>{/if}</td>
+            <td>￥{$p.daily_wage}</td>
+            <td><a class="btn btn-sm btn-primary" href="{:url('/project/view', ['id' => $p->id])}">查看/记工</a></td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    {/if}
+</div>
+
+<div class="card">
+    <div class="card-title"><span>最近上班记录</span></div>
+    {if condition="$recentRecords->isEmpty()"}
+    <div class="empty">暂无上班记录</div>
+    {else /}
+    <table class="data-table">
+        <thead>
+        <tr><th>日期</th><th>所属项目</th><th>上班天数</th><th>加班(小时)</th><th>备注</th></tr>
+        </thead>
+        <tbody>
+        {volist name="recentRecords" id="r"}
+        <tr>
+            <td>{$r.record_date}</td>
+            <td>{$projectMap[$r->project_id] ?? '-'}</td>
+            <td>{$r.work_days}</td>
+            <td>{$r.overtime_hours}</td>
+            <td class="muted">{$r.note}</td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    {/if}
+</div>
+{/block}

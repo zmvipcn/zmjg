@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$siteName}</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand"><span class="logo-dot">逐</span>{$siteName}</div>
+        <ul class="menu">
+            <li class="{if condition="$activeMenu eq 'home'"}active{/if}"><a href="{:url('/')}"><span class="ico">🏠</span>首页</a></li>
+            <li class="{if condition="$activeMenu eq 'current'"}active{/if}"><a href="{:url('/project/current')}"><span class="ico">📋</span>当前项目</a></li>
+            <li class="{if condition="$activeMenu eq 'history'"}active{/if}"><a href="{:url('/project/history')}"><span class="ico">🗂️</span>历史项目</a></li>
+            <li class="{if condition="$activeMenu eq 'profile'"}active{/if}"><a href="{:url('/profile')}"><span class="ico">👤</span>个人中心</a></li>
+            <li class="{if condition="$activeMenu eq 'setting'"}active{/if}"><a href="{:url('/setting')}"><span class="ico">⚙️</span>设置</a></li>
+            {if condition="$currentUser && $currentUser->isAdmin()"}
+            <li class="menu-gap {if condition="$activeMenu eq 'admin'"}active{/if}"><a href="{:url('/admin')}"><span class="ico">🛡️</span>管理后台</a></li>
+            {/if}
+        </ul>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="page-title">{$pageTitle|default='首页'}</div>
+            <div class="user-box">
+                <span class="avatar">
+                    {if condition="$currentUser->avatar"}
+                    <img src="{$currentUser->avatar}" alt="头像">
+                    {else /}
+                    {:mb_substr($currentUser->real_name ?: '用', 0, 1)}
+                    {/if}
+                </span>
+                <span>{$currentUser->real_name}（ID：{$currentUser->id}）</span>
+                <a href="{:url('/logout')}" class="btn btn-sm">退出登录</a>
+            </div>
+        </div>
+        <div class="content">
+            {if condition="session('success')"}<div class="alert alert-success">{:session('success')}</div>{/if}
+            {if condition="session('error')"}<div class="alert alert-error">{:session('error')}</div>{/if}
+            {block name="content"}{/block}
+        </div>
+    </div>
+</div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

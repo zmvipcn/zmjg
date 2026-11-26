@@ -1,18 +1,49 @@
 <?php
+declare(strict_types=1);
 
 namespace app\controller;
 
-use app\BaseController;
+use app\model\Project;
+use app\model\WorkRecord;
+use think\facade\View;
 
-class Index extends BaseController
+/**
+ * 前台首页
+ */
+class Index extends Base
 {
     public function index()
     {
-        return '<style>*{ padding: 0; margin: 0; }</style><iframe src="https://www.thinkphp.cn/welcome?version=' . \think\facade\App::version() . '" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>';
-    }
+        $userId = (int) $this->currentUser->id;
 
-    public function hello($name = 'ThinkPHP8')
-    {
-        return 'hello,' . $name;
+        $activeProjects = Project::where('user_id', $userId)
+            ->where('status', Project::STATUS_ACTIVE)
+            ->order('is_default', 'desc')
+            ->order('id', 'asc')
+            ->select();
+
+        $projectIds = Project::where('user_id', $userId)->column('id');
+        $totalWorkDays = $projectIds ? (float) WorkRecord::whereIn('project_id', $projectIds)->sum('work_days') : 0;
+        $totalOvertime = $projectIds ? (float) WorkRecord::whereIn('project_id', $projectIds)->sum('overtime_hours') : 0;
+        $historyCount = Project::where('user_id', $userId)->where('status', Project::STATUS_HISTORY)->count();
+
+        $recentRecords = WorkRecord::where('user_id', $userId)
+            ->order('record_date', 'desc')
+            ->order('id', 'desc')
+            ->limit(8)
+            ->select();
+
+        $projectMap = Project::whereIn('id', $projectIds)->column('name', 'id');
+
+        View::assign([
+            'activeMenu'     => 'home',
+            'activeProjects' => $activeProjects,
+            'historyCount'   => $historyCount,
+            'totalWorkDays'  => $totalWorkDays,
+            'totalOvertime'  => $totalOvertime,
+            'recentRecords'  => $recentRecords,
+            'projectMap'     => $projectMap,
+        ]);
+        return View::fetch('index/index');
     }
 }

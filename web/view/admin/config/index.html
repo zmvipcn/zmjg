@@ -1,0 +1,27 @@
+{extend name="layout/admin" /}
+{block name="content"}
+<div class="card">
+    <div class="tabs">
+        {volist name="groups" id="label" key="code"}
+        <a href="{:url('/admin/config', ['group' => $code])}" class="{if condition="$group eq $code"}active{/if}">{$label}</a>
+        {/volist}
+    </div>
+
+    <form method="post" action="{:url('/admin/config/save')}">
+        <input type="hidden" name="group" value="{$group}">
+        {volist name="items" id="item"}
+        <div class="form-item" style="margin-bottom:16px">
+            <label>{$item.title}（{$item.name}）</label>
+            {if condition="$item.type === 'number'"}
+            <input type="number" name="config[{$item.name}]" value="{$item.value}">
+            {else /}
+            <input type="text" name="config[{$item.name}]" value="{$item.value}">
+            {/if}
+        </div>
+        {/volist}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存配置</button>
+        </div>
+    </form>
+</div>
+{/block}

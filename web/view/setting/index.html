@@ -1,0 +1,71 @@
+{extend name="layout/front" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title"><span>头像设置</span></div>
+    <form method="post" action="{:url('/setting/avatar')}" enctype="multipart/form-data" style="display:flex;align-items:center;gap:16px">
+        <div class="avatar" style="width:60px;height:60px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden">
+            {if condition="$currentUser->avatar"}
+            <img src="{$currentUser->avatar}" style="width:100%;height:100%;object-fit:cover">
+            {else /}{:mb_substr($currentUser->real_name ?: '用', 0, 1)}{/if}
+        </div>
+        <input type="file" name="avatar" accept="image/*" required>
+        <button type="submit" class="btn btn-primary btn-sm">上传头像</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-title"><span>基本信息</span></div>
+    <form method="post" action="{:url('/setting/profile')}">
+        <div class="form-row">
+            <div class="form-item">
+                <label>姓名/昵称</label>
+                <input type="text" name="real_name" maxlength="50" value="{$currentUser->real_name}">
+            </div>
+            <div class="form-item">
+                <label>电话</label>
+                <input type="text" name="phone" maxlength="30" value="{$currentUser->phone}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-item">
+                <label>邮箱</label>
+                <input type="email" name="email" maxlength="100" value="{$currentUser->email}">
+            </div>
+            <div class="form-item">
+                <label>个性签名</label>
+                <input type="text" name="signature" maxlength="255" value="{$currentUser->signature}">
+            </div>
+        </div>
+        <div class="form-item">
+            <label>个人简介</label>
+            <textarea name="bio" maxlength="500">{$currentUser->bio}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存信息</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-title"><span>修改密码</span></div>
+    <form method="post" action="{:url('/setting/password')}" data-confirm="确认修改登录密码？">
+        <div class="form-row">
+            <div class="form-item">
+                <label>原密码</label>
+                <input type="password" name="old_password" required>
+            </div>
+            <div class="form-item">
+                <label>新密码（至少6位）</label>
+                <input type="password" name="new_password" minlength="6" required>
+            </div>
+            <div class="form-item">
+                <label>确认新密码</label>
+                <input type="password" name="confirm_password" minlength="6" required>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-orange">修改密码</button>
+        </div>
+    </form>
+</div>
+{/block}

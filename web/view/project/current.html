@@ -1,0 +1,151 @@
+{extend name="layout/front" /}
+{block name="content"}
+<div class="card">
+    <div class="card-title">
+        <span>当前项目（进行中最多 {$maxActive} 个，当前 {$projects|count} 个）</span>
+        <button class="btn btn-primary" {if condition="$maxReached"}disabled{else /}onclick="openModal('createModal')"{/if}>＋ 创建项目</button>
+    </div>
+
+    {if condition="$projects->isEmpty()"}
+    <div class="empty">暂无进行中的项目，点击右上角「创建项目」开始记录工天</div>
+    {else /}
+    <table class="data-table">
+        <thead>
+        <tr>
+            <th>序号</th><th>项目名称</th><th>是否默认</th><th>开始日期</th>
+            <th>上班天数(天)</th><th>加班时间(小时)</th><th>日工资</th><th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="projects" id="p" key="i"}
+        <tr>
+            <td>{$i}</td>
+            <td>{$p.name}</td>
+            <td>
+                {if condition="$p.is_default"}
+                <span class="tag tag-blue">默认项目</span>
+                {else /}
+                <form method="post" action="{:url('/project/default', ['id' => $p->id])}" style="display:inline">
+                    <button type="submit" class="btn btn-sm">设为默认</button>
+                </form>
+                {/if}
+            </td>
+            <td>{$p.start_date}</td>
+            <td>{$p.total_days}</td>
+            <td>{$p.total_overtime}</td>
+            <td>￥{$p.daily_wage}</td>
+            <td>
+                <button class="btn btn-sm"
+                    data-id="{$p.id}" data-name="{$p.name}" data-desc="{$p.description}"
+                    data-start="{$p.start_date}" data-wage="{$p.daily_wage}"
+                    data-coef="{$p.overtime_coefficient}"
+                    onclick='fillEditModal(this)'>编辑</button>
+                <a class="btn btn-sm btn-primary" href="{:url('/project/view', ['id' => $p->id])}">查看</a>
+                <form method="post" action="{:url('/project/end', ['id' => $p->id])}" style="display:inline"
+                      data-confirm="确定结束项目「{$p.name}」吗？结束后将转入历史项目。">
+                    <button type="submit" class="btn btn-sm btn-orange">结束项目</button>
+                </form>
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+    {/if}
+</div>
+
+<!-- 创建项目模态框 -->
+<div class="modal-mask" id="createModal">
+    <div class="modal">
+        <div class="modal-header">创建项目<button type="button" class="modal-close" onclick="closeModal('createModal')">×</button></div>
+        <form method="post" action="{:url('/project/create')}">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>项目名称 <span class="req">*</span></label>
+                        <input type="text" name="name" maxlength="100" required placeholder="如：城东工地二期">
+                    </div>
+                    <div class="form-item">
+                        <label>开始日期 <span class="req">*</span></label>
+                        <input type="date" name="start_date" value="{:date('Y-m-d')}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>日工资（元/天）</label>
+                        <input type="number" name="daily_wage" min="0" step="0.01" value="0">
+                    </div>
+                    <div class="form-item">
+                        <label>加班工资系数</label>
+                        <input type="number" name="overtime_coefficient" min="0" step="0.1" value="1.5">
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label>项目说明</label>
+                    <textarea name="description" maxlength="500" placeholder="项目地点、负责人、备注等"></textarea>
+                </div>
+                <div class="form-item" style="margin-top:12px">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" name="is_default" value="1" checked style="width:auto"> 设为默认项目（默认项目仅存在 1 个）
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('createModal')">取消</button>
+                <button type="submit" class="btn btn-primary">创建</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 编辑项目模态框 -->
+<div class="modal-mask" id="editModal">
+    <div class="modal">
+        <div class="modal-header">编辑项目<button type="button" class="modal-close" onclick="closeModal('editModal')">×</button></div>
+        <form method="post" id="editForm" action="">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>项目名称 <span class="req">*</span></label>
+                        <input type="text" name="name" id="edit_name" maxlength="100" required>
+                    </div>
+                    <div class="form-item">
+                        <label>开始日期 <span class="req">*</span></label>
+                        <input type="date" name="start_date" id="edit_start" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-item">
+                        <label>日工资（元/天）</label>
+                        <input type="number" name="daily_wage" id="edit_wage" min="0" step="0.01">
+                    </div>
+                    <div class="form-item">
+                        <label>加班工资系数</label>
+                        <input type="number" name="overtime_coefficient" id="edit_coef" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label>项目说明</label>
+                    <textarea name="description" id="edit_desc" maxlength="500"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('editModal')">取消</button>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function fillEditModal(btn) {
+    var d = btn.dataset;
+    document.getElementById('editForm').action = '{:url("/project/update", ["id" => 0])}'.replace('/0', '/' + d.id);
+    document.getElementById('edit_name').value = d.name;
+    document.getElementById('edit_desc').value = d.desc;
+    document.getElementById('edit_start').value = d.start;
+    document.getElementById('edit_wage').value = d.wage;
+    document.getElementById('edit_coef').value = d.coef;
+    openModal('editModal');
+}
+</script>
+{/block}

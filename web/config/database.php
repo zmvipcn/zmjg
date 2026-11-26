@@ -58,6 +58,17 @@ return [
             'fields_cache'    => false,
         ],
 
+        'sqlite' => [
+            // 数据库类型（本地/沙箱测试用，生产环境使用 mysql）
+            'type'            => 'sqlite',
+            // SQLite 数据库文件路径
+            'database'        => env('DB_SQLITE_PATH', app()->getRuntimePath() . 'zmjg.sqlite'),
+            'prefix'          => '',
+            'fields_strict'   => true,
+            'trigger_sql'     => env('APP_DEBUG', true),
+            'fields_cache'    => false,
+        ],
+
         // 更多的数据库配置信息
     ],
 ];

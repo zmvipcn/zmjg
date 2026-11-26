@@ -22,8 +22,8 @@ return [
     'remove_slash'          => false,
     // 默认的路由变量规则
     'default_route_pattern' => '[\w\.]+',
-    // URL伪静态后缀
-    'url_html_suffix'       => 'html',
+    // URL伪静态后缀（关闭，保持 /admin、/login 等简洁地址）
+    'url_html_suffix'       => false,
     // 访问控制器层名称
     'controller_layer'      => 'controller',
     // 空控制器名
